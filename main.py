@@ -52,8 +52,16 @@ kdcproxyname:s:
 drivestoredirect:s:*
 """
 
+
+def showProgress(count, total, width=25, symbol='-', name=''):
+    print("\r   \033[1;32m" + symbol * int(count / total * width) + "\033[1;31m" + symbol * (width - int(
+        count / total * width)) + f"\033[0m {(count / total) * 100:.2f}%\033[1;37m" + " " + name + "\033[0m", end="")
+
+
 if __name__ == '__main__':
-    company_path = input("Enter Path of wanted Excel file: ")
+    print("\033[1;32m" + "Excel to RDP shortcut" + "\033[0m")
+
+    company_path = input("\033[1;32m" + "Enter path to excel file or folder containing excel files" + "\033[0m" + ":")
     if os.path.isdir(company_path):
         excels = list(filter(lambda f: ".xlsx" in str(f), os.listdir(company_path)))
         if len(excels) == 0:
@@ -66,14 +74,14 @@ if __name__ == '__main__':
     company_name = os.path.split(company_path)[1]
 
     start_time = time.time()
+    count = 0
     for rdp_connection in data.rdp_connections:
-        print(rdp_connection)
-        print()
-
         file_name = f"{company_name}-{rdp_connection.host}-" + str(rdp_connection.username) \
             .replace("\\", "_").replace("/", "_") + ".rdp"
 
         hashed_pwd = os.popen(f"cryptRDP5.exe {rdp_connection.password}").read()
+
+        showProgress(count=count, total=len(data.rdp_connections), name=file_name)
 
         rdp_file = open(company_path + "\\" + file_name, mode="w+", encoding="utf-8")
         rdp_file.write(rdp_prams)
@@ -81,5 +89,8 @@ if __name__ == '__main__':
         rdp_file.write(f"username:s:{rdp_connection.username}" + "\n")
         rdp_file.write(f"password 51:b:{hashed_pwd}" + "\n")
         rdp_file.close()
+        count += 1
 
-    print(f"Finished... Done {len(data.rdp_connections)} Rdp Shortcuts in {time.time() - start_time:.2f} s")
+    showProgress(count=count, total=len(data.rdp_connections))
+
+    print(f"\n\n\033[1;32m{len(data.rdp_connections)} RDP shortcut connections were created in {time.time() - start_time:.2f} seconds\033[0m")
