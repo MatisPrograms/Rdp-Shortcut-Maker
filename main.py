@@ -54,14 +54,14 @@ drivestoredirect:s:*
 
 
 def showProgress(count, total, width=25, symbol='-', name=''):
-    print("\r   \033[1;32m" + symbol * int(count / total * width) + "\033[1;31m" + symbol * (width - int(
+    print("\r \033[1;32m" + symbol * int(count / total * width) + "\033[1;31m" + symbol * (width - int(
         count / total * width)) + f"\033[0m {(count / total) * 100:.2f}%\033[1;37m" + " " + name + "\033[0m", end="")
 
 
 if __name__ == '__main__':
     print("\033[1;32m" + "Excel to RDP shortcut" + "\033[0m")
 
-    company_path = input("\033[1;32m" + "Enter path to excel file or folder containing excel files" + "\033[0m" + ":")
+    company_path = input("Enter path to excel file or folder containing excel files: ")
     if os.path.isdir(company_path):
         excels = list(filter(lambda f: ".xlsx" in str(f), os.listdir(company_path)))
         if len(excels) == 0:
@@ -72,6 +72,9 @@ if __name__ == '__main__':
     data = excel_data(company_path)
     company_path = os.path.split(company_path)[0]
     company_name = os.path.split(company_path)[1]
+
+    # show were will the files be saved
+    print("\033[1;32m" + "Saving to: " + "\033[0m" + os.path.abspath(company_path), end="\n\n")
 
     start_time = time.time()
     count = 0
@@ -92,5 +95,5 @@ if __name__ == '__main__':
         count += 1
 
     showProgress(count=count, total=len(data.rdp_connections))
-
-    print(f"\n\n\033[1;32m{len(data.rdp_connections)} RDP shortcut connections were created in {time.time() - start_time:.2f} seconds\033[0m")
+    print(f"\n\n\033[1;32m{len(data.rdp_connections)}\033[0m RDP shortcut connections were created in "
+          f"\033[1;32m{time.time() - start_time:.2f}\033[0m seconds\033[0m")
