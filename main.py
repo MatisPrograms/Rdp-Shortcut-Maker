@@ -1,9 +1,10 @@
 import os
 import time
+from tkinter.filedialog import askopenfilename
 
 from excel_reader import excel_data
 
-rdp_prams = """screen mode id:i:2
+rdp_options = """screen mode id:i:2
 use multimon:i:0
 desktopwidth:i:1920
 desktopheight:i:1080
@@ -52,29 +53,43 @@ kdcproxyname:s:
 drivestoredirect:s:*
 """
 
+red = "\033[1;31m"
+green = "\033[1;32m"
+yellow = "\033[1;33m"
+blue = "\033[1;34m"
+magenta = "\033[1;35m"
+cyan = "\033[1;36m"
+white = "\033[1;37m"
+reset = "\033[0m"
+
 
 def showProgress(count, total, width=25, symbol='-', name=''):
-    print("\r \033[1;32m" + symbol * int(count / total * width) + "\033[1;31m" + symbol * (width - int(
-        count / total * width)) + f"\033[0m {(count / total) * 100:.2f}%\033[1;37m" + " " + name + "\033[0m", end="")
+    print("\r " + green + symbol * int(count / total * width) + red + symbol * (width - int(count / total * width)) +
+          reset + f" {(count / total) * 100:.2f}% " + white + (f"[{name}]" if name else name) + reset, end="")
+
+
+def print_ascii_art(colour):
+    print(colour + """
+__________________   _____ _                _   _____       _    ___  ___      _             
+| ___ \  _  \ ___ \ /  ___| |              | | /  __ \     | |   |  \/  |     | |            
+| |_/ / | | | |_/ / \ `--.| |__   ___  _ __| |_| /  \/_   _| |_  | .  . | __ _| | _____ _ __ 
+|    /| | | |  __/   `--. \ '_ \ / _ \| '__| __| |   | | | | __| | |\/| |/ _` | |/ / _ \ '__|
+| |\ \| |/ /| |     /\__/ / | | | (_) | |  | |_| \__/\ |_| | |_  | |  | | (_| |   <  __/ |   
+\_| \_|___/ \_|     \____/|_| |_|\___/|_|   \__|\____/\__,_|\__| \_|  |_/\__,_|_|\_\___|_|   
+                                                                                                                                                                       
+""" + reset)
 
 
 if __name__ == '__main__':
-    print("\033[1;32m" + "Excel to RDP shortcut" + "\033[0m")
+    print_ascii_art(blue)
 
-    company_path = input("Enter path to excel file or folder containing excel files: ")
-    if os.path.isdir(company_path):
-        excels = list(filter(lambda f: ".xlsx" in str(f), os.listdir(company_path)))
-        if len(excels) == 0:
-            print("Error - Gave incorrect path to excel file")
-            exit(-1)
-        company_path += "\\" + excels[0]
+    company_path = askopenfilename(title="Select Excel file", filetypes=[("Excel files", "*.xlsx")])
 
     data = excel_data(company_path)
     company_path = os.path.split(company_path)[0]
     company_name = os.path.split(company_path)[1]
 
-    # show were will the files be saved
-    print("\033[1;32m" + "Saving to: " + "\033[0m" + os.path.abspath(company_path), end="\n\n")
+    print(green + "Saving to: " + reset + os.path.abspath(company_path), end="\n\n")
 
     start_time = time.time()
     count = 0
@@ -82,18 +97,30 @@ if __name__ == '__main__':
         file_name = f"{company_name}-{rdp_connection.host}-" + str(rdp_connection.username) \
             .replace("\\", "_").replace("/", "_") + ".rdp"
 
-        hashed_pwd = os.popen(f"cryptRDP5.exe {rdp_connection.password}").read()
+        try:
+            hashed_pwd = os.popen(f"cryptRDP5.exe {rdp_connection.password}").read()
 
-        showProgress(count=count, total=len(data.rdp_connections), name=file_name)
+            showProgress(count=count, total=len(data.rdp_connections), name=file_name)
 
-        rdp_file = open(company_path + "\\" + file_name, mode="w+", encoding="utf-8")
-        rdp_file.write(rdp_prams)
-        rdp_file.write(f"full address:s:{rdp_connection.host}" + "\n")
-        rdp_file.write(f"username:s:{rdp_connection.username}" + "\n")
-        rdp_file.write(f"password 51:b:{hashed_pwd}" + "\n")
-        rdp_file.close()
-        count += 1
+            rdp_file = open(company_path + "\\" + file_name, mode="w+", encoding="utf-8")
+            rdp_file.write(rdp_options)
+            rdp_file.write(f"full address:s:{rdp_connection.host}" + "\n")
+            rdp_file.write(f"username:s:{rdp_connection.username}" + "\n")
+            rdp_file.write(f"password 51:b:{hashed_pwd}" + "\n")
+            rdp_file.close()
+            count += 1
+        except Exception as e:
+            print(red, e, end=reset)
 
     showProgress(count=count, total=len(data.rdp_connections))
-    print(f"\n\n\033[1;32m{len(data.rdp_connections)}\033[0m RDP shortcut connections were created in "
-          f"\033[1;32m{time.time() - start_time:.2f}\033[0m seconds\033[0m")
+
+    ratio = count / len(data.rdp_connections)
+    stat_color = green if ratio == 1 else yellow if ratio >= 0.5 else red
+    stat_message = len(data.rdp_connections) if stat_color == green else f"{count}/{len(data.rdp_connections)}"
+
+    time_passed = time.time() - start_time
+    time_ratio = time_passed / len(data.rdp_connections) if count > 0 else 0
+    time_colour = green if time_ratio < 0.1 else yellow if time_ratio < 0.2 else red
+
+    print(f"\n\n{stat_color}{stat_message}{reset} RDP shortcut connections were created in "
+          f"{time_colour}{time_passed:.2f}{reset} seconds")
