@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 from tkinter.filedialog import askopenfilename
 
@@ -65,7 +66,7 @@ reset = "\033[0m"
 
 def showProgress(count, total, width=25, symbol='-', name=''):
     print("\r " + green + symbol * int(count / total * width) + red + symbol * (width - int(count / total * width)) +
-          reset + f" {(count / total) * 100:.2f}% " + white + (f"[{name}]" if name else name) + reset, end="")
+          reset + f" {(count / total) * 100:.2f}% " + white + (f"[{name}]" if name else name) + reset, end="", flush=True)
 
 
 def print_ascii_art(colour):
@@ -81,8 +82,17 @@ __________________   _____ _                _   _____       _    ___  ___      _
 
 
 if __name__ == '__main__':
-    print_ascii_art(blue)
+    if sys.stdout.isatty():
+        red = ""
+        green = ""
+        yellow = ""
+        blue = ""
+        magenta = ""
+        cyan = ""
+        white = ""
+        reset = ""
 
+    print_ascii_art(blue)
     company_path = askopenfilename(title="Select Excel file", filetypes=[("Excel files", "*.xlsx")])
 
     data = excel_data(company_path)
@@ -110,7 +120,7 @@ if __name__ == '__main__':
             rdp_file.close()
             count += 1
         except Exception as e:
-            print(red, e, end=reset)
+            print(red, "|", str(e).replace("\n", ""), end=reset)
 
     showProgress(count=count, total=len(data.rdp_connections))
 
