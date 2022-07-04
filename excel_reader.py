@@ -16,4 +16,4 @@ class excel_data:
             row_values = row[1].values
             if str(row_values[0]) and str(row_values[1]) != "nan" and str(row_values[2]) != "nan":
                 self.rdp_connections.append(
-                    rdp_connection(host=row_values[0], username=row_values[1], password=row_values[2]))
+                    rdp_connection(host=row_values[0].strip(), username=row_values[1].strip(), password=row_values[2].strip()))

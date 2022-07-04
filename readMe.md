@@ -9,7 +9,7 @@ The created shortcuts will be placed in the same folder as the Excel file with a
 
 The Excel file must follow the exact layout shown below:
 
-![Excel Layout Example](./Excel_Layout_Example.png)
+![Excel Layout Example](./Demo/Excel_Layout_Example.png)
 
 Please find a [tutorial](#how-to-launch-program) in the [Demo](./Demo) folder if needed
 

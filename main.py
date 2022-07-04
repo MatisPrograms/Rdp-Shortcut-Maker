@@ -1,4 +1,5 @@
 import os
+import subprocess
 import sys
 import time
 from tkinter.filedialog import askopenfilename
@@ -66,7 +67,8 @@ reset = "\033[0m"
 
 def showProgress(count, total, width=25, symbol='-', name=''):
     print("\r " + green + symbol * int(count / total * width) + red + symbol * (width - int(count / total * width)) +
-          reset + f" {(count / total) * 100:.2f}% " + white + (f"[{name}]" if name else name) + reset, end="", flush=True)
+          reset + f" {(count / total) * 100:.2f}% " + white + (f"[{name}]" if name else name) + reset, end="",
+          flush=True)
 
 
 def print_ascii_art(colour):
@@ -108,7 +110,10 @@ if __name__ == '__main__':
             .replace("\\", "_").replace("/", "_") + ".rdp"
 
         try:
-            hashed_pwd = os.popen(f"cryptRDP5.exe {rdp_connection.password}").read()
+            cmd = '("%s" | ConvertTo-SecureString -AsPlainText -Force) | ConvertFrom-SecureString;' % \
+                  rdp_connection.password.replace('"', '""')
+            hashed_pwd = subprocess.run(["powershell", "Invoke-Command -ScriptBlock", "{" + cmd + "}"],
+                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True).stdout
 
             showProgress(count=count, total=len(data.rdp_connections), name=file_name)
 
